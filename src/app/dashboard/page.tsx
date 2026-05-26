@@ -1,20 +1,206 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Sword, ChevronRight, Dice6, Plus, Minus, ArrowLeft, Package, Users } from 'lucide-react'
+import { Sword, ChevronRight, Dice6, Plus, Minus, ArrowLeft, Package, Users, Trophy, Star, Shield, UserPlus } from 'lucide-react'
 import type { SessionSetupForm, CampaignTone, Difficulty, ExperienceLevel, AIPlayer, InventorySlots } from '@/types'
 import { v4 as uuidv4 } from 'uuid'
 import { useI18n } from '@/lib/i18n'
 import LanguageSwitcher from '@/components/ui/LanguageSwitcher'
 import GearSetup from '@/components/session/GearSetup'
 import { useAuth } from '@/lib/auth'
+import { getScoreColor, getScoreLabel } from '@/lib/utils'
 
-export default function DashboardPage() {
+const BETA_SESSION_LIMIT = 5
+
+// ─── Beta limit screen ────────────────────────────────────────────────────────
+function BetaLimitScreen({ profile, onGoRanking }: { profile: any; onGoRanking: () => void }) {
+  const isIT = typeof navigator !== 'undefined' && navigator.language?.startsWith('it')
+
+  return (
+    <div className="min-h-screen bg-[#000508] flex items-center justify-center px-6">
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-1/4 left-1/3 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/3 right-1/4 w-64 h-64 bg-cyan-500/4 rounded-full blur-3xl" />
+      </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 30, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        className="relative z-10 w-full max-w-md text-center"
+      >
+        {/* Icon */}
+        <div className="w-20 h-20 rounded-sm bg-amber-500/15 border border-amber-500/30 flex items-center justify-center mx-auto mb-6"
+          style={{ boxShadow: '0 0 40px rgba(245,158,11,0.15)' }}>
+          <Shield className="w-10 h-10 text-amber-400" />
+        </div>
+
+        {/* Title */}
+        <h1 className="font-display text-3xl font-black text-white mb-3">
+          {isIT ? 'Beta Terminata' : 'Beta Complete'}
+        </h1>
+        <p className="text-[#6b8fa0] text-sm leading-relaxed mb-8">
+          {isIT
+            ? `Hai completato le tue ${BETA_SESSION_LIMIT} sessioni di beta test. Grazie per aver testato DM Trainer AI! Il tuo feedback è prezioso.`
+            : `You've completed your ${BETA_SESSION_LIMIT} beta test sessions. Thank you for testing DM Trainer AI! Your feedback is invaluable.`
+          }
+        </p>
+
+        {/* Stats */}
+        {profile && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="glass-card rounded-sm p-6 mb-6 fantasy-border"
+          >
+            <div className="text-xs text-[#6b8fa0] uppercase tracking-wider mb-4">
+              {isIT ? 'Le Tue Statistiche Beta' : 'Your Beta Stats'}
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="text-center">
+                <div className="font-display text-2xl font-black text-cyan-400">
+                  {profile.total_sessions}
+                </div>
+                <div className="text-[10px] text-[#6b8fa0] mt-0.5">
+                  {isIT ? 'Sessioni' : 'Sessions'}
+                </div>
+              </div>
+              <div className="text-center">
+                <div
+                  className="font-display text-2xl font-black"
+                  style={{ color: getScoreColor(profile.avg_score) }}
+                >
+                  {profile.avg_score?.toFixed(1) ?? '—'}
+                </div>
+                <div className="text-[10px] text-[#6b8fa0] mt-0.5">
+                  {isIT ? 'Media' : 'Average'}
+                </div>
+              </div>
+              <div className="text-center">
+                <div
+                  className="font-display text-2xl font-black"
+                  style={{ color: getScoreColor(profile.best_score) }}
+                >
+                  {profile.best_score?.toFixed(1) ?? '—'}
+                </div>
+                <div className="text-[10px] text-[#6b8fa0] mt-0.5">
+                  {isIT ? 'Miglior' : 'Best'}
+                </div>
+              </div>
+            </div>
+
+            {profile.avg_score > 0 && (
+              <div className="mt-4 pt-4 border-t border-cyan-500/10">
+                <div
+                  className="font-display text-lg font-bold"
+                  style={{ color: getScoreColor(profile.avg_score) }}
+                >
+                  {getScoreLabel(profile.avg_score)} DM
+                </div>
+                <div className="text-xs text-[#6b8fa0] mt-0.5">
+                  {isIT ? 'Il tuo grado finale' : 'Your final rank'}
+                </div>
+              </div>
+            )}
+          </motion.div>
+        )}
+
+        {/* Actions */}
+        <div className="space-y-3">
+          <button
+            onClick={onGoRanking}
+            className="w-full flex items-center justify-center gap-2 py-3.5 text-sm font-semibold text-black bg-amber-400 rounded-sm hover:bg-amber-300 transition-all"
+            style={{ boxShadow: '0 0 20px rgba(245,158,11,0.2)' }}
+          >
+            <Trophy className="w-4 h-4" />
+            {isIT ? 'Vedi il Ranking Globale' : 'See Global Ranking'}
+          </button>
+          <p className="text-[10px] text-[#6b8fa0]">
+            {isIT
+              ? 'Per accedere a più sessioni contatta lo sviluppatore.'
+              : 'Contact the developer to access more sessions.'}
+          </p>
+        </div>
+      </motion.div>
+    </div>
+  )
+}
+
+// ─── Guest limit screen ───────────────────────────────────────────────────────
+function GuestLimitScreen({ onSignUp }: { onSignUp: () => void }) {
+  const isIT = typeof navigator !== 'undefined' && navigator.language?.startsWith('it')
+
+  return (
+    <div className="min-h-screen bg-[#000508] flex items-center justify-center px-6">
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-1/4 left-1/3 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/3 right-1/4 w-64 h-64 bg-emerald-500/4 rounded-full blur-3xl" />
+      </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 30, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        className="relative z-10 w-full max-w-md text-center"
+      >
+        <div className="w-20 h-20 rounded-sm bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center mx-auto mb-6 glow-cyan">
+          <Dice6 className="w-10 h-10 text-cyan-400" />
+        </div>
+
+        <h1 className="font-display text-3xl font-black text-white mb-3">
+          {isIT ? 'Sessione Ospite Completata!' : 'Guest Session Complete!'}
+        </h1>
+        <p className="text-[#6b8fa0] text-sm leading-relaxed mb-8">
+          {isIT
+            ? 'Hai usato la tua sessione ospite gratuita. Registrati ora e ottieni 5 sessioni beta completamente gratis!'
+            : 'You\'ve used your free guest session. Sign up now and get 5 free beta sessions!'
+          }
+        </p>
+
+        {/* Benefits */}
+        <div className="glass-card rounded-sm p-5 mb-6 text-left space-y-3">
+          {[
+            { icon: '🎲', text: isIT ? '5 sessioni gratuite con account beta' : '5 free sessions with beta account' },
+            { icon: '📊', text: isIT ? 'Storico dei tuoi punteggi nel tempo' : 'Track your scores over time' },
+            { icon: '🏆', text: isIT ? 'Partecipa al ranking globale dei DM' : 'Join the global DM ranking' },
+            { icon: '💾', text: isIT ? 'Sessioni salvate nel cloud' : 'Sessions saved in the cloud' },
+          ].map(item => (
+            <div key={item.text} className="flex items-center gap-3 text-sm text-[#c8d8e0]">
+              <span className="text-lg flex-shrink-0">{item.icon}</span>
+              {item.text}
+            </div>
+          ))}
+        </div>
+
+        <button
+          onClick={onSignUp}
+          className="w-full flex items-center justify-center gap-2 py-4 text-base font-bold text-black bg-cyan-400 rounded-sm hover:bg-cyan-300 transition-all glow-cyan mb-3"
+        >
+          <UserPlus className="w-5 h-5" />
+          {isIT ? 'Registrati Gratis — 5 Sessioni' : 'Sign Up Free — 5 Sessions'}
+          <ChevronRight className="w-4 h-4" />
+        </button>
+
+        <p className="text-[10px] text-[#6b8fa0]">
+          {isIT ? 'Nessuna carta di credito · Solo email e password' : 'No credit card · Just email and password'}
+        </p>
+      </motion.div>
+    </div>
+  )
+}
   const router = useRouter()
   const { t, tObject, locale } = useI18n()
   const { user, profile } = useAuth()
+
+  // Beta limit check — registered users
+  const hasReachedLimit = user && profile && profile.total_sessions >= BETA_SESSION_LIMIT
+
+  // Guest limit check — 1 session max
+  const guestSessions = typeof window !== 'undefined'
+    ? parseInt(localStorage.getItem('guest_sessions') ?? '0')
+    : 0
+  const guestReachedLimit = !user && guestSessions >= 1
 
   // Step 1 = session config, Step 2 = inventory setup
   const [step, setStep] = useState<1 | 2>(1)
@@ -95,8 +281,14 @@ export default function DashboardPage() {
       locale,
     }
     sessionStorage.setItem(`session_${sessionId}`, JSON.stringify(sessionData))
-    // Save players with inventories
     sessionStorage.setItem(`players_${sessionId}`, JSON.stringify(generatedPlayers))
+
+    // Track guest sessions in localStorage
+    if (!user) {
+      const current = parseInt(localStorage.getItem('guest_sessions') ?? '0')
+      localStorage.setItem('guest_sessions', String(current + 1))
+    }
+
     router.push(`/session/${sessionId}`)
   }
 
@@ -111,6 +303,23 @@ export default function DashboardPage() {
         onBack={() => setStep(1)}
         onStart={handleStartSession}
       />
+    )
+  }
+
+  // Show beta limit screen for registered users
+  if (hasReachedLimit) {
+    return (
+      <BetaLimitScreen
+        profile={profile}
+        onGoRanking={() => router.push('/ranking')}
+      />
+    )
+  }
+
+  // Show guest limit screen
+  if (guestReachedLimit) {
+    return (
+      <GuestLimitScreen onSignUp={() => router.push('/auth')} />
     )
   }
 

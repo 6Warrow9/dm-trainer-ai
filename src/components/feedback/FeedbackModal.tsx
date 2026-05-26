@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { X, TrendingUp, AlertTriangle, Lightbulb, ChevronRight, RotateCcw, Star } from 'lucide-react'
+import { X, TrendingUp, AlertTriangle, Lightbulb, ChevronRight, RotateCcw, Star, UserPlus, Dice6 } from 'lucide-react'
 import type { FeedbackReport, AIPlayer } from '@/types'
 import { getScoreColor } from '@/lib/utils'
 import { useI18n } from '@/lib/i18n'
@@ -10,8 +10,10 @@ interface FeedbackModalProps {
   feedback: FeedbackReport | null
   isLoading: boolean
   players: AIPlayer[]
+  isGuest?: boolean
   onClose: () => void
   onNewSession: () => void
+  onSignUp?: () => void
 }
 
 function getDMRank(score: number, t: (k: string) => string): string {
@@ -23,8 +25,71 @@ function getDMRank(score: number, t: (k: string) => string): string {
   return t('feedback.dmRanks.poor')
 }
 
-export default function FeedbackModal({ feedback, isLoading, players, onClose, onNewSession }: FeedbackModalProps) {
-  const { t } = useI18n()
+// ─── Guest signup banner ──────────────────────────────────────────────────────
+function GuestSignupBanner({ locale, onSignUp }: { locale: string; onSignUp?: () => void }) {
+  const isIT = locale === 'it'
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.3 }}
+      className="rounded-sm border p-5 text-center"
+      style={{
+        background: 'linear-gradient(135deg, rgba(0,229,255,0.08) 0%, rgba(0,255,135,0.05) 100%)',
+        borderColor: 'rgba(0,229,255,0.3)',
+        boxShadow: '0 0 30px rgba(0,229,255,0.08)',
+      }}
+    >
+      {/* Icon */}
+      <div className="w-12 h-12 rounded-sm bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center mx-auto mb-3">
+        <Dice6 className="w-6 h-6 text-cyan-400" />
+      </div>
+
+      <h3 className="font-display text-lg font-bold text-white mb-2">
+        {isIT ? '🎲 Hai completato la tua sessione ospite!' : '🎲 You completed your guest session!'}
+      </h3>
+
+      <p className="text-sm text-[#6b8fa0] leading-relaxed mb-4">
+        {isIT
+          ? 'Registrati gratuitamente e ottieni altre 5 sessioni beta — salva i tuoi punteggi e partecipa al ranking globale!'
+          : 'Sign up for free and get 5 more beta sessions — save your scores and join the global ranking!'
+        }
+      </p>
+
+      {/* Benefits */}
+      <div className="grid grid-cols-3 gap-3 mb-5">
+        {[
+          { icon: '🎲', label: isIT ? '5 sessioni gratis' : '5 free sessions' },
+          { icon: '📊', label: isIT ? 'Storico voti' : 'Score history' },
+          { icon: '🏆', label: isIT ? 'Ranking globale' : 'Global ranking' },
+        ].map(item => (
+          <div key={item.label} className="p-2 rounded-sm border border-cyan-500/15 bg-cyan-500/5">
+            <div className="text-xl mb-1">{item.icon}</div>
+            <div className="text-[10px] text-[#6b8fa0]">{item.label}</div>
+          </div>
+        ))}
+      </div>
+
+      <button
+        onClick={onSignUp}
+        className="w-full flex items-center justify-center gap-2 py-3 text-sm font-bold text-black bg-cyan-400 rounded-sm hover:bg-cyan-300 transition-all glow-cyan"
+      >
+        <UserPlus className="w-4 h-4" />
+        {isIT ? 'Registrati Gratis →' : 'Sign Up Free →'}
+      </button>
+
+      <p className="text-[10px] text-[#6b8fa0] mt-2">
+        {isIT ? 'Nessuna carta di credito richiesta' : 'No credit card required'}
+      </p>
+    </motion.div>
+  )
+}
+
+export default function FeedbackModal({
+  feedback, isLoading, players, isGuest, onClose, onNewSession, onSignUp,
+}: FeedbackModalProps) {
+  const { t, locale } = useI18n()
 
   const scoreCategories = feedback
     ? [
@@ -69,7 +134,12 @@ export default function FeedbackModal({ feedback, isLoading, players, onClose, o
               </button>
             </div>
 
-            <div className="p-6 space-y-8">
+            <div className="p-6 space-y-6">
+              {/* Guest signup banner — shown FIRST for guests */}
+              {isGuest && (
+                <GuestSignupBanner locale={locale} onSignUp={onSignUp} />
+              )}
+
               {/* Overall Score */}
               <div
                 className="flex items-center justify-between p-6 rounded-sm fantasy-border"
@@ -105,7 +175,6 @@ export default function FeedbackModal({ feedback, isLoading, players, onClose, o
 
               {/* Score Categories */}
               <div>
-                <h3 className="text-xs text-[#6b8fa0] uppercase tracking-wider mb-4">Category Breakdown</h3>
                 <div className="grid grid-cols-1 gap-3">
                   {scoreCategories.map(({ label, data }) => (
                     <div key={label} className="p-4 rounded-sm border border-white/5 bg-white/2">
@@ -224,13 +293,24 @@ export default function FeedbackModal({ feedback, isLoading, players, onClose, o
 
               {/* Actions */}
               <div className="flex gap-3 pt-4 border-t border-cyan-500/10">
-                <button
-                  onClick={onNewSession}
-                  className="flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium text-black bg-cyan-400 rounded-sm hover:bg-cyan-300 transition-colors"
-                >
-                  <RotateCcw className="w-4 h-4" />
-                  {t('feedback.actions.newSession')}
-                </button>
+                {!isGuest && (
+                  <button
+                    onClick={onNewSession}
+                    className="flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium text-black bg-cyan-400 rounded-sm hover:bg-cyan-300 transition-colors"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                    {t('feedback.actions.newSession')}
+                  </button>
+                )}
+                {isGuest && (
+                  <button
+                    onClick={onSignUp}
+                    className="flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium text-black bg-cyan-400 rounded-sm hover:bg-cyan-300 transition-colors"
+                  >
+                    <UserPlus className="w-4 h-4" />
+                    {locale === 'it' ? 'Registrati Gratis' : 'Sign Up Free'}
+                  </button>
+                )}
                 <button
                   onClick={onClose}
                   className="px-6 py-3 text-sm text-[#6b8fa0] border border-white/10 rounded-sm hover:text-white hover:border-white/20 transition-all"

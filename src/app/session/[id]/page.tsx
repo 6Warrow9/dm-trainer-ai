@@ -1038,8 +1038,10 @@ export default function SessionPage() {
             feedback={feedback}
             isLoading={isGeneratingFeedback}
             players={players}
+            isGuest={!user}
             onClose={() => setShowFeedback(false)}
             onNewSession={() => router.push('/dashboard')}
+            onSignUp={() => router.push('/auth')}
           />
         )}
       </AnimatePresence>
