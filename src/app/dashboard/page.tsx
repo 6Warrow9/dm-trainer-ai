@@ -189,6 +189,8 @@ function GuestLimitScreen({ onSignUp }: { onSignUp: () => void }) {
     </div>
   )
 }
+
+export default function DashboardPage() {
   const router = useRouter()
   const { t, tObject, locale } = useI18n()
   const { user, profile } = useAuth()
@@ -325,10 +327,6 @@ function GuestLimitScreen({ onSignUp }: { onSignUp: () => void }) {
 
   return (
     <div className="min-h-screen bg-[#000508]">
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-1/4 left-1/3 w-96 h-96 bg-cyan-500/4 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/3 right-1/4 w-64 h-64 bg-emerald-500/4 rounded-full blur-3xl" />
-      </div>
 
       {/* Nav */}
       <nav className="relative z-10 flex items-center justify-between px-6 md:px-12 py-5 border-b border-cyan-500/10">
