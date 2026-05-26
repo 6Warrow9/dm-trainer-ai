@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Zap, Package, RefreshCw, ChevronRight } from 'lucide-react'
 import type { AIPlayer, InventorySlots } from '@/types'
 import { RARITY_CONFIG, RARITIES, autoAssignGear, type GearRarityMode, type ItemsMode } from '@/lib/itemCatalog'
+import { CLASS_ICONS } from '@/lib/utils'
 
 interface GearSetupProps {
   players: AIPlayer[]
