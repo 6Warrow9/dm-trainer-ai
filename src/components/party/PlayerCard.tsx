@@ -6,6 +6,7 @@ import { ChevronDown, ChevronUp } from 'lucide-react'
 import type { AIPlayer } from '@/types'
 import { CLASS_ICONS, ARCHETYPE_ICONS } from '@/lib/utils'
 import { useI18n } from '@/lib/i18n'
+import StatsBar from './StatsBar'
 
 interface PlayerCardProps {
   player: AIPlayer
@@ -62,6 +63,18 @@ export default function PlayerCard({ player, isTyping }: PlayerCardProps) {
           >
             {archetypeIcon} {archetypeLabel}
           </span>
+        </div>
+
+        {/* HP & Stamina bars */}
+        <div className="mt-2.5">
+          <StatsBar
+            hp={player.hp ?? 100}
+            maxHp={player.max_hp ?? 100}
+            stamina={player.stamina ?? 30}
+            maxStamina={player.max_stamina ?? 30}
+            color={player.color}
+            compact={false}
+          />
         </div>
 
         {isTyping && (

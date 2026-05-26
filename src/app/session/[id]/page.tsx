@@ -63,6 +63,10 @@ export default function SessionPage() {
       const loadedPlayers: AIPlayer[] = JSON.parse(storedPlayers).map((p: AIPlayer) => ({
         ...p,
         inventory: p.inventory ?? [null, null, null, null],
+        hp: p.hp ?? 100,
+        max_hp: p.max_hp ?? 100,
+        stamina: p.stamina ?? 30,
+        max_stamina: p.max_stamina ?? 30,
       }))
       setPlayers(loadedPlayers)
       if (storedMessages) setMessages(JSON.parse(storedMessages))
@@ -238,6 +242,66 @@ export default function SessionPage() {
     }
   }
 
+  // ── Apply stat changes (HP / Stamina) ───────────────────────────────────────
+  const applyStatChanges = (
+    changes: Array<{ player_id: string; hp_change: number; stamina_change: number; reason: string }>
+  ) => {
+    if (!changes || changes.length === 0) return
+    setPlayers(prev => {
+      const updated = prev.map(player => {
+        const change = changes.find(c => c.player_id === player.id)
+        if (!change) return player
+        const newHp = Math.max(0, Math.min(player.max_hp ?? 100, (player.hp ?? 100) + change.hp_change))
+        const newStamina = Math.max(0, Math.min(player.max_stamina ?? 30, (player.stamina ?? 30) + change.stamina_change))
+        return { ...player, hp: newHp, stamina: newStamina }
+      })
+      sessionStorage.setItem(`players_${id}`, JSON.stringify(updated))
+      return updated
+    })
+  }
+
+  const checkStatChanges = async (
+    dmMsg: string,
+    responses: Array<{ player_id: string | null; player_name?: string; content: string }>,
+    sessionLocale: string
+  ) => {
+    if (!responses.length) return
+    try {
+      const res = await fetch('/api/update-stats', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          players,
+          dm_message: dmMsg,
+          player_responses: responses
+            .filter(r => r.player_id)
+            .map(r => ({ player_id: r.player_id, player_name: r.player_name ?? '', content: r.content })),
+          locale: sessionLocale,
+        }),
+      })
+      const data = await res.json()
+      if (data.changes?.length > 0) {
+        applyStatChanges(data.changes)
+        const statDescs = data.changes.map((c: any) => {
+          const pName = players.find(p => p.id === c.player_id)?.name ?? '?'
+          const parts = []
+          if (c.hp_change !== 0) parts.push(`${c.hp_change > 0 ? '+' : ''}${c.hp_change} HP`)
+          if (c.stamina_change !== 0) parts.push(`${c.stamina_change > 0 ? '+' : ''}${c.stamina_change} STA`)
+          return `${pName}: ${parts.join(', ')}${c.reason ? ` (${c.reason})` : ''}`
+        }).filter(Boolean).join(' · ')
+        if (statDescs) {
+          setMessages(prev => [...prev, {
+            id: `stats-${Date.now()}`,
+            session_id: id, player_id: null,
+            role: 'system' as const,
+            content: `⚔️ ${statDescs}`,
+            created_at: new Date().toISOString(),
+          }])
+        }
+      }
+    } catch { /* silent */ }
+  }
+
   // ── Apply inventory changes from AI analysis ────────────────────────────────
   const applyInventoryChanges = (
     changes: Array<{
@@ -404,6 +468,9 @@ export default function SessionPage() {
         } catch {
           // Inventory detection fails silently
         }
+
+        // Check for HP/Stamina changes
+        checkStatChanges(sentText, responses, sessionLocale)
       }
     } catch (err) {
       console.error(err)

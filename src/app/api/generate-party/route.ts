@@ -38,6 +38,10 @@ export async function POST(req: NextRequest) {
         color: PLAYER_COLORS[index % PLAYER_COLORS.length],
         relationships: {},
         inventory: [null, null, null, null],
+        hp: 100,
+        max_hp: 100,
+        stamina: 30,
+        max_stamina: 30,
         created_at: new Date().toISOString(),
       })
     )

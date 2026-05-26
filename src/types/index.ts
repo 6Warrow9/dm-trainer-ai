@@ -62,6 +62,11 @@ export interface AIPlayer {
   avatar_seed: string;
   color: string;
   inventory: InventorySlots;
+  // Vital stats
+  hp: number;
+  max_hp: number;
+  stamina: number;
+  max_stamina: number;
   created_at: string;
 }
 
