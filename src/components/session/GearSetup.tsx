@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Zap, Package, RefreshCw, ChevronRight } from 'lucide-react'
 import type { AIPlayer, InventorySlots } from '@/types'
-iimport { RARITY_CONFIG, RARITIES, autoAssignGear, type GearRarityMode, type ItemsMode } from '@/lib/itemCatalog'
+import { RARITY_CONFIG, RARITIES, autoAssignGear, type GearRarityMode, type ItemsMode } from '@/lib/itemCatalog'
 
 interface GearSetupProps {
   players: AIPlayer[]
