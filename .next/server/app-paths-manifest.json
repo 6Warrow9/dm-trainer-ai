@@ -1,0 +1,10 @@
+{
+  "/dashboard/page": "app/dashboard/page.js",
+  "/page": "app/page.js",
+  "/session/[id]/page": "app/session/[id]/page.js",
+  "/profile/page": "app/profile/page.js",
+  "/ranking/page": "app/ranking/page.js",
+  "/api/detect-roll/route": "app/api/detect-roll/route.js",
+  "/api/chat/route": "app/api/chat/route.js",
+  "/api/update-inventory/route": "app/api/update-inventory/route.js"
+}
