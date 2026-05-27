@@ -14,8 +14,8 @@ export async function POST(req: NextRequest) {
     const responses: Message[] = []
 
     for (const player of players) {
-      // 90% chance each player responds (simulate occasional distraction)
-      if (Math.random() < 0.1) continue
+      // Only 60% chance each player responds — real players don't always react
+      if (Math.random() < 0.4) continue
 
       const messages = buildChatMessages(
         player,
@@ -30,8 +30,8 @@ export async function POST(req: NextRequest) {
         const completion = await openai.chat.completions.create({
           model: 'gpt-4o-mini',
           messages,
-          temperature: 0.85,
-          max_tokens: 200,
+          temperature: 0.9,
+          max_tokens: 80,  // Short responses only — real players are brief
         })
 
         const content = completion.choices[0].message.content || ''
