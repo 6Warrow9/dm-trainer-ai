@@ -75,7 +75,7 @@ export default function AuthPage() {
         if (error) {
           setError('Email o password non corretti.')
         } else {
-          router.push('/dashboard')
+          window.location.href = '/dashboard'
         }
       }
     } finally {
