@@ -73,7 +73,7 @@ export default function AuthPage() {
       } else {
         const { error } = await signIn(email.trim(), password)
         if (error) {
-          setError('Email o password non corretti.')
+          setError('Errore: ' + error)
         } else {
           window.location.href = '/dashboard'
         }
