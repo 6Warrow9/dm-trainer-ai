@@ -48,7 +48,9 @@ export default function UpdatePasswordPage() {
         setError('Errore: ' + error.message)
       } else {
         setSuccess(true)
-        setTimeout(() => router.push('/dashboard'), 2500)
+        // Sign out first to clear the recovery session, then redirect to login
+        await supabase.auth.signOut()
+        setTimeout(() => router.push('/auth'), 2500)
       }
     } finally {
       setIsLoading(false)
@@ -79,7 +81,7 @@ export default function UpdatePasswordPage() {
           <div className="text-center py-8">
             <div className="text-5xl mb-4">✅</div>
             <p className="text-emerald-400 font-bold text-lg">Password aggiornata!</p>
-            <p className="text-[#6b8fa0] text-sm mt-2">Reindirizzamento alla dashboard...</p>
+            <p className="text-[#6b8fa0] text-sm mt-2">Ora puoi accedere con la nuova password...</p>
           </div>
         ) : !isReady ? (
           <div className="text-center py-8">
